@@ -12,4 +12,5 @@ export { format as byteFormat } from "https://deno.land/x/bytes_formater@1.2.0/m
 export { Hash } from "https://deno.land/x/checksum@1.4.0/mod.ts";
 export { sha256 } from "https://deno.land/x/sha256@v1.0.2/mod.ts";
 export { replaceParams } from "https://deno.land/x/sql_builder@1.5.0/util.ts";
-export * as log from "https://deno.land/x/std@0.53.0/log/mod.ts";
+// export * as log from "https://deno.land/x/std@0.53.0/log/mod.ts";
+export * as log from "https://deno.land/std/log/mod.ts";

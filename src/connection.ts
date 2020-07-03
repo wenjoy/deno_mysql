@@ -60,7 +60,7 @@ export class Connection {
     this.serverVersion = handshakePacket.serverVersion;
     this.capabilities = handshakePacket.serverCapabilities;
 
-    receive = await this.nextPacket();
+    receive = await this.nextPacket(true);
     const header = receive.body.readUint8();
     if (header === 0xff) {
       const error = parseError(receive.body, this);
@@ -82,12 +82,12 @@ export class Connection {
     await this._connect();
   }
 
-  private async nextPacket(): Promise<ReceivePacket> {
+  private async nextPacket(auth=false): Promise<ReceivePacket> {
     let eofCount = 0;
     const timeout = this.client.config.timeout || 1000;
 
     while (this.conn!) {
-      const packet = await new ReceivePacket().parse(this.conn!);
+      const packet = await new ReceivePacket().parse(this.conn!, auth);
       if (packet) {
         if (packet.type === "ERR") {
           packet.body.skip(1);
@@ -158,7 +158,12 @@ export class Connection {
       throw new Error("Must be connected first");
     }
     const data = buildQuery(sql, params);
+    console.log('query', sql);
+    
     await new SendPacket(data, 0).send(this.conn);
+    console.log('send packet');
+    
+    console.log('receiving packet, begin parse ---->');
     let receive = await this.nextPacket();
     if (receive.type === "OK") {
       receive.body.skip(1);
