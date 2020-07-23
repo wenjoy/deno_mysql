@@ -2,6 +2,7 @@ import { byteFormat } from "../../deps.ts";
 import { BufferReader, BufferWriter } from "../buffer.ts";
 import { WriteError } from "../constant/errors.ts";
 import { debug, log } from "../logger.ts";
+import { PacketType } from '../../src/constant/packet.ts';
 
 /** @ignore */
 interface PacketHeader {
@@ -13,7 +14,7 @@ interface PacketHeader {
 export class SendPacket {
   header: PacketHeader;
 
-  constructor(readonly body: Uint8Array, no: number) {
+  constructor (readonly body: Uint8Array, no: number) {
     this.header = { size: body.length, no };
   }
 
@@ -36,9 +37,9 @@ export class SendPacket {
 export class ReceivePacket {
   header!: PacketHeader;
   body!: BufferReader;
-  type!: "EOF" | "OK" | "ERR" | "RESULT";
+  type!: PacketType;
 
-  async parse(reader: Deno.Reader, auth:boolean = false): Promise<ReceivePacket | null> {
+  async parse(reader: Deno.Reader): Promise<ReceivePacket | null> {
     const header = new BufferReader(new Uint8Array(4));
     let readCount = 0;
     let nread = await reader.read(header.buffer);
@@ -50,7 +51,7 @@ export class ReceivePacket {
     };
 
     console.log('pars received packet, body size: ', this.header.size);
-    
+
     this.body = new BufferReader(new Uint8Array(this.header.size));
     nread = await reader.read(this.body.buffer);
     if (nread === null) return null;
@@ -58,38 +59,39 @@ export class ReceivePacket {
 
     log.warning(`body: ${byteFormat(this.body.buffer)}`);
 
+    const { OK_Packet, ERR_Packet, EOF_Packet, Result } = PacketType
     switch (this.body.buffer[0]) {
-      case 0x00:
-        this.type = "OK";
+      case OK_Packet:
+        this.type = OK_Packet;
         break;
       case 0xff:
-        this.type = "ERR";
+        this.type = ERR_Packet;
         break;
       case 0xfe:
-        this.type = "EOF";
+        this.type = EOF_Packet;
         break;
       default:
-        this.type = "RESULT";
+        this.type = Result;
         break;
     }
 
-    if(auth && this.body.buffer[0] === 0x01) {
-      log.info('auth more data')
-      const len = 16;
-      let end = false;
-      let count =  20;
-      let extraBuffer;
-        extraBuffer = new Uint8Array(len);
-      while(!(end || count < 1)) {
-        const result = await reader.read(extraBuffer)
-        console.log('result',result, byteFormat(extraBuffer))
-        if(Number(result) - len <0) {
-          break;
-        }
-        count--;
-      }
-      log.info('auth more data end')
-    }
+    // if(this.body.buffer[0] === 0x01) {
+    //   log.info('auth more data')
+    //   const len = 16;
+    //   let end = false;
+    //   let count =  20;
+    //   let extraBuffer;
+    //     extraBuffer = new Uint8Array(len);
+    //   while(!(end || count < 1)) {
+    //     const result = await reader.read(extraBuffer)
+    //     console.log('result',result, byteFormat(extraBuffer))
+    //     if(Number(result) - len <0) {
+    //       break;
+    //     }
+    //     count--;
+    //   }
+    //   log.info('auth more data end')
+    // }
 
     debug(() => {
       const data = new Uint8Array(readCount);
@@ -97,7 +99,7 @@ export class ReceivePacket {
       data.set(this.body.buffer, 4);
       log.debug(
         `receive: ${readCount}B, size = ${this.header.size}, no = ${this.header.no} \n${
-          byteFormat(data)
+        byteFormat(data)
         }\n`,
       );
     });

@@ -55,9 +55,9 @@ async function useLib() {
   });
   console.log('----------first ----------');
   // const result = await client.execute('show databases;')
-  const result = await client.execute('use mytest;')
+  // const result = await client.execute('use mytest;')
   // const result1 = await client.query('select * from mtest;')
-  console.log('----------result----------', result);
+  // console.log('----------result----------', result);
   // console.log('----------result1----------', result1);
   // console.log('----------second ----------');
   // const result2 = await client.query('select * from mtest;')

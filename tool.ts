@@ -30,5 +30,10 @@ function whatsUrCapability(flag: number) {
   return capabilities.filter(item => item[1] & flag).map(item => item);
 }
 
-console.log('test',whatsUrCapability(0x85a6ff01))
-console.log('test',whatsUrCapability(0x8da6ff01))
+//big endian
+// console.log('test',whatsUrCapability(0x8da60f00))
+//little endian
+// console.log('test',whatsUrCapability(0x000fa68d))
+
+console.log('test',whatsUrCapability(0x00aaf3cf));
+console.log('test',whatsUrCapability(0x00aaf3cf));
